@@ -1,17 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSession } from "../../session";
 
-const SignIn = ({ handleLogin, history }: any) => {
+const SignIn = ({ handleLogin, userManager }: any) => {
     const navigate = useNavigate();
-    const session: any = getSession('session');
+    
 
     useEffect(() => {
-        if (session?.is_logged) {
+        _isAuthenticated();
+    }, [])
+
+    const _isAuthenticated = async () => {
+        const session: any = await userManager();
+        if (session) {
             navigate('/authorized');
         }
-    }, [])
+    }
 
     return (
         <div className="container-fluid" style={{ height: '100vh' }}>

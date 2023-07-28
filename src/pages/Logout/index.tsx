@@ -1,23 +1,31 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from "react";
-import { getSession, setSession } from "../../session";
 import { useNavigate } from "react-router-dom";
 
-const Logout = () => {
+const Logout = ({ userManager }: any) => {
 
-    const session = getSession('session');
     const navigate = useNavigate();
+
     useEffect(() => {
-        setSession('session', null);
+        _isAuthenticated();
+    }, []);
+
+    const _isAuthenticated = async () => {
+        const session: any = await userManager.getUser();
+        if (session) {
+            userManager.signoutRedirect();
+            return;
+        }
+
         navigate('/');
-    }, [session]);
+    }
 
 
     return (
         <div className="container-fluid" style={{ height: '100vh' }}>
             <div className="row justify-content-center align-items-center h-100">
                 <div className="col-12 text-center">
-                    <div className="fw-bold mb-3 text-secondary ">Session finalizada con exito...</div>
+                    <div className="fw-bold mb-3 text-secondary ">Finalizando sesion...</div>
                 </div>
             </div>
         </div>

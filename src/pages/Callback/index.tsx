@@ -1,14 +1,10 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from "react";
-import { getSession, setSession } from "../../session";
-import Oauth2Service from "../../services/oauth2";
 import { useNavigate } from "react-router-dom";
-import moment from "moment";
 
 const Callback = ({ userManager }: any) => {
 
   const navigate: any = useNavigate();
-  const Oauth2 = new Oauth2Service();
 
   useEffect(() => {
     _handleLogin();
@@ -22,36 +18,20 @@ const Callback = ({ userManager }: any) => {
   }, []);
 
   const _handleLogin = async () => {
-    const session = getSession('session');
+    const session = await userManager.getUser();
 
-    if (session?.is_logged) {
+    if (session) {
       navigate('/authorized');
       return;
     }
 
     userManager
       .signinRedirectCallback()
-      .then(async (user: any, data:any) => {
-        if (user) {
-
-          console.log(data)
-          const access_token = user.access_token;
-          const userProfileResponse: any = await Oauth2.getProfile(access_token);
-          const expires_at = moment(parseInt(user.expires_at) * 1000);
-          
-          const tokenDuration = moment.duration(expires_at.diff(moment()));
-          const tokenDurationInMinutes = tokenDuration.asMinutes();
-
-          const humanFormat = expires_at.format('DD/MM/YYYY HH:mm:ss');
-          
-          setSession('session', { is_logged: true, ...user, tokenDurationInMinutes: Math.round(tokenDurationInMinutes), humanFormat, profile: { ...user?.profile, ...userProfileResponse.data } });
-
-        } else {
-          setSession('session', null);
-        }
+      .then(() => {
+        navigate('/authorized');
       })
       .catch(() => {
-        setSession('session', null);
+        userManager.signoutRedirect();
       });
   }
 

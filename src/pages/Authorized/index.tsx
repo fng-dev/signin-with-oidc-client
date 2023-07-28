@@ -1,54 +1,48 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSession, setSession } from "../../session";
-import Oauth2Service from "../../services/oauth2";
 import moment from "moment";
+import UsersService from "../../services/users.service";
+import User from "../../components/User";
 
-const Authorized = ({ handleLogout }: any) => {
+const Authorized = ({ handleLogout, userManager }: any) => {
     const navigate = useNavigate();
-    const Oauth2 = new Oauth2Service();
+    const Users = new UsersService(userManager);
 
     const [profile, setProfile] = useState<any>({});
+    const [users, setUsers] = useState<any>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        refreshTokenAndGetProfile();
+        _handleLoadData();
 
-        window.addEventListener('logout_action', refreshTokenAndGetProfile)
+        window.addEventListener('logout_action', _handleLoadData)
 
         return () => {
-            window.removeEventListener('logout_action', refreshTokenAndGetProfile)
+            window.removeEventListener('logout_action', _handleLoadData)
         }
     }, [])
 
-    const refreshTokenAndGetProfile = async () => {
-        const session: any = getSession('session');
+    const _handleLoadData = async () => {
 
         try {
-            if (!session || !session.is_logged) {
+            setLoading(true);
+
+            const session: any = await userManager.getUser();
+
+            if (!session) {
                 navigate('/');
                 return
             }
 
-            setLoading(true);
-            const newTokensResponse: any = await Oauth2.refreshToken();
-            const { token } = newTokensResponse.data
-            const humanFormat = moment().add(30, 'minutes').format('DD/MM/YYYY HH:mm:ss');
-            const userProfileResponse: any = await Oauth2.getProfile(token);
+            const expires_at = moment(parseInt(session.expires_at) * 1000);
+            const humanFormat = expires_at.format('DD/MM/YYYY HH:mm:ss');
 
-            setProfile({
-                ...profile,
-                error: false,
-                ...userProfileResponse.data,
-                userId: session.profile.sub,
-                old_token: session.access_token,
-                new_token: token,
-                refresh_token: session.refresh_token,
-                tokenDurationInMinutes: session.tokenDurationInMinutes,
-                humanFormat
-            })
-            setSession('session', { ...session, access_token: token, humanFormat });
+            setProfile({ ...session, humanFormat });
+
+            const usersResponse = await Users.getUsers();
+            setUsers(usersResponse.data.items)
+
             setLoading(false);
         } catch (e: any) {
             setProfile({ ...profile, error: e.message })
@@ -75,44 +69,46 @@ const Authorized = ({ handleLogout }: any) => {
                             </div>
                         </div>
                     ) : (
-                        <div className="div d-flex flex-column mt-5 border p-3" style={{ maxWidth: '600px' }}>
-                            <div className="col-12 text-center">
-                                <div className="fw-bold mb-3 text-secondary ">Informacion del perfil</div>
+                        <>
+                            <div className="div d-flex flex-column mt-5 border p-3" style={{ maxWidth: '600px' }}>
+                                <div className="col-12 text-center">
+                                    <div className="fw-bold mb-3 text-secondary ">Informacion del perfil</div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">UserId: <br /> <span className="text-danger">{profile?.userId}</span> </div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">Nombre: <br /> <span className="text-danger">{profile?.profile?.name}</span> </div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">Email: <br /> <span className="text-danger">{profile?.profile?.email}</span> </div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">Caduca a las: <br /> <span className="text-danger">{profile?.humanFormat}</span> </div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">Access Token: <br /> <span className="text-danger">{profile?.access_token}</span> </div>
+                                </div>
+
+                                <div className="col-12" style={{ fontSize: '12px', wordBreak: 'break-all' }}>
+                                    <div className="fw-bold mb-3 text-secondary ">Refresh Token: <br /> <span className="text-danger">{profile?.refresh_token}</span> </div>
+                                </div>
+
                             </div>
 
-                            <div className="col-12" style={{ fontSize: '12px' }}>
-                                <div className="fw-bold mb-3 text-secondary ">UserId: <br /> <span className="text-danger">{profile?.userId}</span> </div>
+                            <div className="col-12 text-center mb-2 mt-5 text-secondary fw-bold">
+                                Usuarios api externa
                             </div>
 
-                            <div className="col-12" style={{ fontSize: '12px' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Nombre: <br /> <span className="text-danger">{profile?.name}</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Email: <br /> <span className="text-danger">{profile?.email}</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Duracion Token: <br /> <span className="text-danger">{profile?.tokenDurationInMinutes} minutos</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Caduca a las: <br /> <span className="text-danger">{profile?.humanFormat}</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px', wordBreak: 'break-all' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Token antiguo: <br /> <span className="text-danger">{profile?.old_token}</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px', wordBreak: 'break-all' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Token nuevo: <br /> <span className="text-danger">{profile?.new_token}</span> </div>
-                            </div>
-
-                            <div className="col-12" style={{ fontSize: '12px', wordBreak: 'break-all' }}>
-                                <div className="fw-bold mb-3 text-secondary ">Refresh Token: <br /> <span className="text-danger">{profile?.refresh_token}</span> </div>
-                            </div>
-
-                        </div>
+                            {users && users.map((user: any) => (
+                                <User data={user} />
+                            ))}
+                        </>
                     )
                 }
             </div>

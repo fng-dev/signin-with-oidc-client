@@ -1,8 +1,7 @@
 import axios from "axios";
-import authConfig from "../configs/authConfig";
 
 const instance = axios.create({
-  baseURL: authConfig.authority,
+  baseURL: "https://0l6jia56pi.execute-api.sa-east-1.amazonaws.com",
 });
 
 instance.interceptors.response.use(
