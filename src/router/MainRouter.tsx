@@ -18,12 +18,10 @@ const MainRouter = (props: any) => {
     });
 
     useEffect(() => {
-        userManager.getUser().then((user) => {
-            if (!user) {
-                clearAuth();
-            }
+        userManager.getUser().catch(() => {
+            authorize();
         });
-    },[])
+    }, [])
 
     function authorize() {
         userManager.signinRedirect();
