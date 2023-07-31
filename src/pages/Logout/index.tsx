@@ -11,6 +11,11 @@ const Logout = ({ userManager }: any) => {
     }, []);
 
     const _isAuthenticated = async () => {
+        if (!userManager) {
+            navigate('/');
+            return;
+        }
+
         const session: any = await userManager.getUser();
         if (session) {
             userManager.signoutRedirect();

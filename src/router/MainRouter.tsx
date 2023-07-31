@@ -7,7 +7,7 @@ import Authorized from '../pages/Authorized';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import authConfig from '../configs/authConfig';
-import { useEffect } from 'react';
+import FusionAuth from '../Provider/FusionAuth';
 
 const MainRouter = (props: any) => {
 
@@ -16,12 +16,6 @@ const MainRouter = (props: any) => {
         loadUserInfo: true,
         ...authConfig,
     });
-
-    useEffect(() => {
-        userManager.getUser().catch(() => {
-            authorize();
-        });
-    }, [])
 
     function authorize() {
         userManager.signinRedirect();
@@ -37,7 +31,9 @@ const MainRouter = (props: any) => {
                 <Route
                     path="/"
                     element={
-                        <SignIn handleLogin={authorize} userManager={userManager} />
+                        <FusionAuth userManager={userManager} authorize={authorize}>
+                            <SignIn handleLogin={authorize} userManager={userManager} />
+                        </FusionAuth>
                     }
                 />
 
@@ -58,7 +54,9 @@ const MainRouter = (props: any) => {
                 <Route
                     path="/authorized"
                     element={
-                        <Authorized handleLogout={clearAuth} userManager={userManager} />
+                        <FusionAuth userManager={userManager} authorize={authorize}>
+                            <Authorized handleLogout={clearAuth} userManager={userManager} />
+                        </FusionAuth>
                     }
                 />
 

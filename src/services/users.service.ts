@@ -1,4 +1,5 @@
 import { objectToParams } from "../helpers/uri";
+import { getSession } from "../session/session";
 import apiInstance from "./api_instance";
 
 class UsersService {
@@ -9,7 +10,7 @@ class UsersService {
   }
 
   setHeaders = async (access_token: any = null) => {
-    const session = await this.userManager?.getUser();
+    const session = getSession();
     apiInstance.defaults.headers.common["Authorization"] = `Bearer ${
       access_token || session?.access_token
     }`;

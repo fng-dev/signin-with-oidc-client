@@ -106,7 +106,7 @@ const Authorized = ({ handleLogout, userManager }: any) => {
                             </div>
 
                             {users && users.map((user: any) => (
-                                <User data={user} />
+                                <User data={user} key={user.PK} />
                             ))}
                         </>
                     )

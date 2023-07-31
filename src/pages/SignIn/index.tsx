@@ -11,7 +11,7 @@ const SignIn = ({ handleLogin, userManager }: any) => {
     }, [])
 
     const _isAuthenticated = async () => {
-        const session: any = await userManager();
+        const session: any = await userManager.getUser();
         if (session) {
             navigate('/authorized');
         }

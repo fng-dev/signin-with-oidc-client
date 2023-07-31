@@ -13,6 +13,7 @@ instance.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 400)
     ) {
+      window.location.href = "/logout";
       window.dispatchEvent(new Event("logout_action"));
     }
     return Promise.reject(error);
